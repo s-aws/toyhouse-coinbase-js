@@ -61,14 +61,13 @@ class CoinbaseProWebSocketManager {
 		function _preconnect ( event_name_array, web_socket) {
 			event_name_array.forEach( 
 				function ( event_name) {
-					function simple_default_function( event) { console.log(event)} 
+					function simple_default_function( event) { console.log( event)} 
 					var log_message = "using default function for "; 
-					if (( event_name == "onmessage") || 
-						( event_name == "onerror") || 
-						( event_name == "onclose") || 
-						( event_name == "onopen")) {
-						web_socket.onmessage = simple_default_function;
-					}
+					if ( event_name == "onmessage") {} 
+					else if ( event_name == "onerror") {}
+					else if ( event_name == "onerror") {}
+					else if ( event_name == "onclose") { this.onclose = simple_default_function} 
+					else if ( event_name == "onopen") {}
 					console.log( log_message += event_name);
 				}, web_socket);
 		}
