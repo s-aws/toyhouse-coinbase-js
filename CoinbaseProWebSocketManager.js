@@ -42,7 +42,10 @@ class CoinbaseProWebSocketManager {
 		function _preconnect ( event_name_array, web_socket) {
 			event_name_array.forEach( 
 				function ( event_name) {
-					function simple_default_function( event) {} 
+					function simple_default_function( event) {
+						const successfulConnectMessage = "Subscribed successsfully";
+						if ( this._simple_default_functionFirstMessage === undefined) {	console.log( successfulConnectMessage); this._simple_default_functionFirstMessage = 1 }
+					} 
 					var log_message = "using default function for "; 
 					if ( event_name == "onmessage") { this.onmessage = simple_default_function} 
 					else if ( event_name == "onerror") {}
