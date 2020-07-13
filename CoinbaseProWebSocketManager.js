@@ -59,7 +59,7 @@ class CoinbaseProWebSocketManager {
 			var __send_signature_counter = 0;
 
 			function __check_state ( state) { // #returns true or false
-				const state_message_prefix = "WebSocket connecting state: ";
+				const state_message_prefix = "WebSocket state: ";
 				const bad_state_message = "cannot subscribe... :(";
 				const good_state_message = "connecting...";
 				const good_state = 1;
