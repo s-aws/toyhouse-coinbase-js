@@ -26,6 +26,8 @@ class CoinbaseProWebSocketManager {
 	connect () {
 		// Subscription Generation
 		const event_names_array = this.on_types;
+		const endpoint = this.fully_qualified_endpoint;
+		const create_new_websocket = this.#new_WebSocket;
 		const subscription_connection_config = {
 			attempt_count: 3,
 			retry_delay_ms: 125,
@@ -72,7 +74,7 @@ class CoinbaseProWebSocketManager {
 			function __send_subscription ( counter, max_counter, retry_delay, web_socket, subscription_message) {
 				const message_category = "ERROR: ";				
 				var web_socket_state = web_socket.readyState;
-				console.log( retry_delay);
+				console.log( "Retry delay: ", retry_delay);
 				if ( counter < max_counter) {
 					counter++;
 					if ( web_socket_state !== undefined) {
@@ -81,7 +83,7 @@ class CoinbaseProWebSocketManager {
 							console.log( subscription_message);
 							try { web_socket.send( subscription_message)} catch ( error) { console.log( message_category, error)}
 						} else { 
-							console.log( counter); 
+							console.log( "Retry count: ", counter, "/", max_counter); 
 							setTimeout( __send_subscription, retry_delay, counter, max_counter, retry_delay, web_socket, subscription_message);
 						}
 					}
@@ -95,20 +97,20 @@ class CoinbaseProWebSocketManager {
 								config["subscription_message"]);
 		}
 
-		var _conn = function ( endpoint, new_ws) {
+		function _connect ( endpoint, new_ws) {
 			var web_socket = new_ws( endpoint);
 			console.log(web_socket);
 
 			web_socket.onclose = function ( event) {
 				console.log( event);
-				_conn( endpoint, new_ws);
+				_connect( endpoint, new_ws);
 			}
 
 			_preconnect( event_names_array, web_socket);
 			_subscribe_to_websocket( subscription_connection_config, web_socket);
 		}
 
-		_conn( this.fully_qualified_endpoint, this.#new_WebSocket);
+		_connect( endpoint, create_new_websocket);
 
 	}
 }
