@@ -1,72 +1,49 @@
 class CoinbaseProWebSocketManager { 
-	'use strict';
-	// Connection
-	#endpoint;
-	#wss_protocol_prefix;
-	#fully_qualified_endpoint;
-
-		// Websocket
-		#on_types;
-
-			// Subscription
-			#subscription;
-			#type;
-			#channels 	= 	[];
-			#product_ids= 	[];
-
-	// open websocket
-	#new_WebSocket = function( endpoint) { return new WebSocket( endpoint)}
-
-	// Subscription Generation
-	#generate_subscription_string = function() {
-		console.log("generating subscription string");
-		return JSON.stringify({ // will improve this later
-			"type" : 		this.#type,
-			"product_ids": 	this.#product_ids,
-			"channels": 	this.#channels
-		});
+	constructor (protocol = "wss://", endpoint = "ws-feed.pro.coinbase.com") {
+		this.fully_qualified_endpoint = protocol + endpoint;
+		this.on_types = [ "onopen", "onclose", "onerror", "onmessage"];
 	}
 
-	constructor () {
-		this.#wss_protocol_prefix = "wss://";
-		this.#endpoint = "ws-feed.pro.coinbase.com"; // may change in the future? (used to be gdax)
-		this.#on_types = [ "onopen", "onclose", "onerror", "onmessage"];
-		this.#fully_qualified_endpoint = this.#wss_protocol_prefix + this.#endpoint; // For connection
-		// Open the WebSocket connection
-		this.ws	= this.#new_WebSocket( this.#fully_qualified_endpoint);
-		return this;
-	}
+	#new_WebSocket ( endpoint) { return new WebSocket( endpoint)}	// Subscription
 
-	clear_channels () { this.#channels = []}
-	set channels ( channel) { this.#channels.push( channel)}
-	get channels () {return this.#channels}
+	#subscription;
+	channels 	= 	[];
+	product_ids = 	[];
+	type;
+
+	clear_channels () { this.channels = []}
+	add_channel ( channel) { this.channels.push( channel)}
+	get channels () { return this.channels}
 	
 	// currently type can only be subscribe but we're not hard coding it
-	set type ( type) { this.#type = type}
-	get type () { return this.#type}
+	set type ( type) { this.type = type}
+	get type () { return this.type}
 
-	clear_product_ids () { this.#product_ids = []}
-	set product_ids ( product_id) {	this.#product_ids.push(product_id)}
-	get product_ids () { return this.#product_ids}
+	clear_product_ids () { this.product_ids = []}
+	add_product_id ( product_id) {	this.product_ids.push( product_id)}
+	get product_ids () { return this.product_ids}
 
 	connect () {
-		const event_names_array = this.#on_types;
+		// Subscription Generation
+		const event_names_array = this.on_types;
 		const subscription_connection_config = {
 			attempt_count: 3,
 			retry_delay_ms: 125,
-			subscription_message: this.#generate_subscription_string()
-		}
-		var web_socket = this.ws;
+			subscription_message: 		
+				JSON.stringify({ // will improve this later
+					"type" : 		this.type,
+					"product_ids": 	this.product_ids,
+					"channels": 	this.channels
+				})
+		};
 
 		function _preconnect ( event_name_array, web_socket) {
 			event_name_array.forEach( 
 				function ( event_name) {
-					function simple_default_function( event) { console.log( event)} 
+					function simple_default_function( event) {} 
 					var log_message = "using default function for "; 
-					if ( event_name == "onmessage") {} 
+					if ( event_name == "onmessage") { this.onmessage = simple_default_function} 
 					else if ( event_name == "onerror") {}
-					else if ( event_name == "onerror") {}
-					else if ( event_name == "onclose") { this.onclose = simple_default_function} 
 					else if ( event_name == "onopen") {}
 					console.log( log_message += event_name);
 				}, web_socket);
@@ -80,7 +57,7 @@ class CoinbaseProWebSocketManager {
 			var __send_signature_counter = 0;
 
 			function __check_state ( state) { // #returns true or false
-				const state_message_prefix = "WebSocket connecting state: "
+				const state_message_prefix = "WebSocket connecting state: ";
 				const bad_state_message = "cannot subscribe... :(";
 				const good_state_message = "connecting...";
 				const good_state = 1;
@@ -93,15 +70,16 @@ class CoinbaseProWebSocketManager {
 			}
 			
 			function __send_subscription ( counter, max_counter, retry_delay, web_socket, subscription_message) {
+				const message_category = "ERROR: ";				
 				var web_socket_state = web_socket.readyState;
-				console.log(retry_delay);
+				console.log( retry_delay);
 				if ( counter < max_counter) {
 					counter++;
 					if ( web_socket_state !== undefined) {
 						if ( __check_state( web_socket_state) === true) {
 							counter = max_counter;
 							console.log( subscription_message);
-							try { web_socket.send( subscription_message)} catch ( error) { console.log("ERROR: ", error)}
+							try { web_socket.send( subscription_message)} catch ( error) { console.log( message_category, error)}
 						} else { 
 							console.log( counter); 
 							setTimeout( __send_subscription, retry_delay, counter, max_counter, retry_delay, web_socket, subscription_message);
@@ -117,8 +95,20 @@ class CoinbaseProWebSocketManager {
 								config["subscription_message"]);
 		}
 
-		_preconnect( event_names_array, web_socket);
-		_subscribe_to_websocket( subscription_connection_config, web_socket);
+		var _conn = function ( endpoint, new_ws) {
+			var web_socket = new_ws( endpoint);
+			console.log(web_socket);
+
+			web_socket.onclose = function ( event) {
+				console.log( event);
+				_conn( endpoint, new_ws);
+			}
+
+			_preconnect( event_names_array, web_socket);
+			_subscribe_to_websocket( subscription_connection_config, web_socket);
+		}
+
+		_conn( this.fully_qualified_endpoint, this.#new_WebSocket);
 
 	}
 }

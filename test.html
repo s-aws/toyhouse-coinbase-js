@@ -4,8 +4,9 @@
 <script>
 	function connect_to_cb_ws() {
 		var ws = new CoinbaseProWebSocketManager();
-		ws.channels 		= "full";
-		ws.product_ids 		= "OXT-USD";		
+		ws.add_channel("full");
+		ws.add_product_id("OXT-USD");
+		ws.add_product_id("BTC-USD");
 		ws.type 			= "subscribe";
 		ws.connect();
 		return ws;
