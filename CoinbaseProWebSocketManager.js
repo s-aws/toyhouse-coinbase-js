@@ -59,7 +59,6 @@ class CoinbaseProWebSocketManager {
 
 							// events based on counter
 							if ( !( this._simple_default_functionMessageCounter % 10)) {}
-							this._simple_default_functionFirstMessage++;								
 						}
 
 						// onerror
