@@ -1,5 +1,5 @@
 class CoinbaseProWebSocketManager { 
-	constructor (protocol = "wss://", endpoint = "ws-feed.pro.coinbase.com") {
+	constructor ( protocol = "wss://", endpoint = "ws-feed.pro.coinbase.com") {
 		this.fully_qualified_endpoint = protocol + endpoint;
 		this.on_types = [ "onopen", "onclose", "onerror", "onmessage"];
 	}
@@ -42,14 +42,43 @@ class CoinbaseProWebSocketManager {
 		function _preconnect ( event_name_array, web_socket) {
 			event_name_array.forEach( 
 				function ( event_name) {
-					function simple_default_function( event) {
-						const successfulConnectMessage = "Subscribed successsfully";
-						if ( this._simple_default_functionFirstMessage === undefined) {	console.log( successfulConnectMessage); this._simple_default_functionFirstMessage = 1 }
-					} 
 					var log_message = "using default function for "; 
-					if ( event_name == "onmessage") { this.onmessage = simple_default_function} 
-					else if ( event_name == "onerror") {}
-					else if ( event_name == "onopen") {}
+
+					function simple_default_function( event) {
+						if ( this._simple_default_functionRootCounter === undefined) { this._simple_default_functionRootCounter = 0}
+						const successfulConnectMessage = "Subscribed successsfully";
+						this._simple_default_functionRootCounter++;
+
+						// onmessage
+						if ( event[ "type"] == "message") {
+							if ( this._simple_default_functionMessageCounter === undefined) { this._simple_default_functionMessageCounter = 0}
+							this._simple_default_functionMessageCounter++;
+
+							// the first message event
+							if ( this._simple_default_functionMessageCounter === 1) { console.log( successfulConnectMessage)}
+
+							// events based on counter
+							if ( !( this._simple_default_functionMessageCounter % 10)) {}
+							this._simple_default_functionFirstMessage++;								
+						}
+
+						// onerror
+						else if ( event[ "type"] === "error") {
+							if ( this._simple_default_functionErrorCounter === undefined) { this._simple_default_functionErrorCounter = 0}
+							this._simple_default_functionErrorCounter++;
+							console.log( "Error: ", this._simple_default_functionErrorCounter, " ", event)
+						}
+
+						// onopen
+						else if ( event[ "type"] === "open") {
+							if ( this._simple_default_functionOpenCounter === undefined) { this._simple_default_functionOpenCounter = 0}
+							this._simple_default_functionOpenCounter++;
+						}
+					} 
+
+					if ( event_name === "onmessage") { this.onmessage = simple_default_function} 
+					else if ( event_name === "onerror") { this.onerror = simple_default_function}
+					else if ( event_name === "onopen") { this.onopen = simple_default_function}
 					console.log( log_message += event_name);
 				}, web_socket);
 		}
@@ -69,7 +98,7 @@ class CoinbaseProWebSocketManager {
 				const web_socket_ready_state_values = [ "CONNECTING", "OPEN", "CLOSING", "CLOSED"];					
 				var state_flag;
 
-				console.log(state_message_prefix, web_socket_ready_state_values[state]);
+				console.log( state_message_prefix, web_socket_ready_state_values[state]);
 				if ( state === good_state) { console.log( good_state_message); state_flag = true} else { state_flag = false; console.log( bad_state_message)}
 				return state_flag;
 			}
@@ -102,7 +131,7 @@ class CoinbaseProWebSocketManager {
 
 		function _connect ( endpoint, new_ws) {
 			var web_socket = new_ws( endpoint);
-			console.log(web_socket);
+			console.log( web_socket);
 
 			web_socket.onclose = function ( event) {
 				console.log( event);
