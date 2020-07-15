@@ -30,7 +30,7 @@ class CoinbaseProWebSocketManager {
 		const create_new_websocket = this.#new_WebSocket;
 		const subscription_connection_config = {
 			attempt_count: 3,
-			retry_delay_ms: 125,
+			retry_delay_ms: 40,
 			subscription_message: 		
 				JSON.stringify({ // will improve this later
 					"type" : 		this.type,
@@ -120,8 +120,8 @@ class CoinbaseProWebSocketManager {
 					}
 				}
 			}
-
-			__send_subscription( __send_signature_counter, 
+			setTimeout( __send_subscription, config["retry_delay_ms"],
+								__send_signature_counter,
 								config["attempt_count"], 
 								config["retry_delay_ms"], 
 								web_socket, 
