@@ -42,7 +42,7 @@ class CoinbaseProWebSocketManager {
 		function _preconnect ( event_name_array, web_socket) {
 			event_name_array.forEach( 
 				function ( event_name) {
-					var log_message = "using default function for "; 
+					var log_message = "using default function for: "; 
 
 					function simple_default_function( event) {
 						if ( this._simple_default_functionRootCounter === undefined) { this._simple_default_functionRootCounter = 0}
@@ -97,7 +97,7 @@ class CoinbaseProWebSocketManager {
 				const web_socket_ready_state_values = [ "CONNECTING", "OPEN", "CLOSING", "CLOSED"];					
 				var state_flag;
 
-				console.log( Date.now(), state_message_prefix, web_socket_ready_state_values[state]);
+				console.log( Date.now(), state_message_prefix.concat( web_socket_ready_state_values[state]));
 				if ( state === good_state) { console.log( Date.now(), good_state_message); state_flag = true} else { state_flag = false; console.log( Date.now(), bad_state_message)}
 				return state_flag;
 			}
@@ -105,16 +105,16 @@ class CoinbaseProWebSocketManager {
 			function __send_subscription ( counter, max_counter, retry_delay, web_socket, subscription_message) {
 				const message_category = "ERROR: ";				
 				var web_socket_state = web_socket.readyState;
-				console.log( Date.now(), "Retry delay: ", retry_delay);
+				console.log( Date.now(), "Retry delay: ".concat( retry_delay));
 				if ( counter < max_counter) {
 					counter++;
 					if ( web_socket_state !== undefined) {
 						if ( __check_state( web_socket_state) === true) {
 							counter = max_counter;
-							console.log( Date.now(), subscription_message);
+							console.log( Date.now(), "Sending subscription string: ".concat(subscription_message));
 							try { web_socket.send( subscription_message)} catch ( error) { console.log( message_category, error)}
 						} else { 
-							console.log( Date.now(), "Retry count: ", counter, "/", max_counter); 
+							console.log( Date.now(), "Retry count: ".concat(counter, "/", max_counter)); 
 							setTimeout( __send_subscription, retry_delay, counter, max_counter, retry_delay, web_socket, subscription_message);
 						}
 					}
