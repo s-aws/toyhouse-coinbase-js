@@ -65,7 +65,7 @@ class CoinbaseProWebSocketManager {
 						else if ( event[ "type"] === "error") {
 							if ( this._simple_default_functionErrorCounter === undefined) { this._simple_default_functionErrorCounter = 0}
 							this._simple_default_functionErrorCounter++;
-							console.log( Date.now(), "Error: ", this._simple_default_functionErrorCounter, " ", event)
+							console.log( Date.now(), "Error:".concat( this._simple_default_functionErrorCounter, event));
 						}
 
 						// onopen
