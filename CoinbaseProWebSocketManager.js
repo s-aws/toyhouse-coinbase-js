@@ -1,7 +1,6 @@
 class CoinbaseProWebSocketManager { 
 	constructor ( protocol = "wss://", endpoint = "ws-feed.pro.coinbase.com") {
 		this.fully_qualified_endpoint = protocol + endpoint;
-		this.on_types = [ "onopen", "onclose", "onerror", "onmessage"];
 	}
 
 	#new_WebSocket ( endpoint) { return new WebSocket( endpoint)}	// Subscription
@@ -11,6 +10,8 @@ class CoinbaseProWebSocketManager {
 	product_ids = 	[];
 	type;
 
+	onmessage;
+
 	clear_channels () { this.channels = []}
 	add_channel ( channel) { this.channels.push( channel)}
 	get channels () { return this.channels}
@@ -19,13 +20,16 @@ class CoinbaseProWebSocketManager {
 	set type ( type) { this.type = type}
 	get type () { return this.type}
 
+	set onmessage ( func) { this.onmessage = func}
+	get onmessage () { return this.onmessage}
+
 	clear_product_ids () { this.product_ids = []}
 	add_product_id ( product_id) {	this.product_ids.push( product_id)}
 	get product_ids () { return this.product_ids}
 
 	connect () {
 		// Subscription Generation
-		const event_names_array = this.on_types;
+		const onmessage_function = this.onmessage;
 		const endpoint = this.fully_qualified_endpoint;
 		const create_new_websocket = this.#new_WebSocket;
 		const subscription_connection_config = {
@@ -39,48 +43,12 @@ class CoinbaseProWebSocketManager {
 				})
 		};
 
-		function _preconnect ( event_name_array, web_socket) {
-			event_name_array.forEach( 
-				function ( event_name) {
-					var log_message = "using default function for: "; 
+		function default_event_function( event) {
+			if ( this._simple_default_functionRootCounter === undefined) { this._simple_default_functionRootCounter = 0} this._simple_default_functionRootCounter++;
 
-					function simple_default_function( event) {
-						if ( this._simple_default_functionRootCounter === undefined) { this._simple_default_functionRootCounter = 0}
-						const successfulConnectMessage = "Subscribed successsfully";
-						this._simple_default_functionRootCounter++;
-
-						// onmessage
-						if ( event[ "type"] == "message") {
-							if ( this._simple_default_functionMessageCounter === undefined) { this._simple_default_functionMessageCounter = 0}
-							this._simple_default_functionMessageCounter++;
-
-							// the first message event
-							if ( this._simple_default_functionMessageCounter === 1) { console.log( Date.now(), successfulConnectMessage)}
-
-							// events based on counter
-							if ( !( this._simple_default_functionMessageCounter % 10)) {}
-						}
-
-						// onerror
-						else if ( event[ "type"] === "error") {
-							if ( this._simple_default_functionErrorCounter === undefined) { this._simple_default_functionErrorCounter = 0}
-							this._simple_default_functionErrorCounter++;
-							console.log( Date.now(), "Error:".concat( this._simple_default_functionErrorCounter, event));
-						}
-
-						// onopen
-						else if ( event[ "type"] === "open") {
-							if ( this._simple_default_functionOpenCounter === undefined) { this._simple_default_functionOpenCounter = 0}
-							this._simple_default_functionOpenCounter++;
-						}
-					} 
-
-					if ( event_name === "onmessage") { this.onmessage = simple_default_function} 
-					else if ( event_name === "onerror") { this.onerror = simple_default_function}
-					else if ( event_name === "onopen") { this.onopen = simple_default_function}
-					console.log( Date.now(), log_message += event_name);
-				}, web_socket);
-		}
+			if ( event[ "type"] === "error") { if ( this._simple_default_functionErrorCounter === undefined) { this._simple_default_functionErrorCounter = 0} this._simple_default_functionErrorCounter++; console.log( Date.now(), "Error:".concat( this._simple_default_functionErrorCounter, event))} 
+			else if ( event[ "type"] === "open") { if ( this._simple_default_functionOpenCounter === undefined) { this._simple_default_functionOpenCounter = 0} this._simple_default_functionOpenCounter++}
+		} 
 
 		function _subscribe_to_websocket ( config, web_socket) {
 			const subscribing_message = "subscribing...";
@@ -121,6 +89,7 @@ class CoinbaseProWebSocketManager {
 				}
 			}
 			setTimeout( __send_subscription, config["retry_delay_ms"],
+				// params
 								__send_signature_counter,
 								config["attempt_count"], 
 								config["retry_delay_ms"], 
@@ -128,19 +97,16 @@ class CoinbaseProWebSocketManager {
 								config["subscription_message"]);
 		}
 
-		function _connect ( endpoint, new_ws) {
+		function _connect ( endpoint, new_ws, onmessage) {
 			var web_socket = new_ws( endpoint);
-
-			web_socket.onclose = function ( event) {
-				console.log( Date.now(), "connection closed");
-				_connect( endpoint, new_ws);
-			}
-
-			_preconnect( event_names_array, web_socket);
+			web_socket.onclose = function ( event) { console.log( Date.now(), "connection closed");	_connect( endpoint, new_ws)}
+			web_socket.onmessage= onmessage;
+			web_socket.onerror 	= default_event_function;
+			web_socket.onopen 	= default_event_function;
 			_subscribe_to_websocket( subscription_connection_config, web_socket);
 		}
 
-		_connect( endpoint, create_new_websocket);
+		_connect( endpoint, create_new_websocket, onmessage_function);
 
 	}
 }

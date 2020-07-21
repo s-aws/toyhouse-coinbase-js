@@ -1,13 +1,18 @@
+<script src="CoinbaseProOrderBook.js">
+</script>
+
 <script src="CoinbaseProWebSocketManager.js">
 </script>
 
 <script>
 	function connect_to_cb_ws() {
+		var processor = new CoinbaseProOrderBook();
 		var ws = new CoinbaseProWebSocketManager();
 		ws.add_channel("full");
 		ws.add_product_id("OXT-USD");
 		ws.add_product_id("BTC-USD");
 		ws.type 			= "subscribe";
+		ws.onmessage = processor.simple_default_function;
 		ws.connect();
 		return ws;
 	}
